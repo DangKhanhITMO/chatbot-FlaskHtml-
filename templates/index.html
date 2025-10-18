@@ -20,14 +20,18 @@
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 
   <style>
-    body {
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
       font-family: 'Quicksand', sans-serif;
       background-size: cover;
       background-repeat: no-repeat;
       background-position: center center;
-      margin: 0;
-      padding: 1rem 0;
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -35,52 +39,77 @@
 
     h1 {
       font-family: 'Pacifico', cursive;
-      font-size: 3rem;
-      font-weight: 800;
-      color: #fff;
+      font-size: 2.5rem;
       text-align: center;
-      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7),
-                   0 0 10px rgba(255, 255, 255, 0.4);
-      margin-bottom: 1.5rem;
+      color: #fff;
+      margin: 1rem 0;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.7), 0 0 10px rgba(255,255,255,0.4);
     }
 
     .container {
       display: flex;
+      flex-direction: row;
       width: 95vw;
       max-width: 1400px;
-      gap: 2rem;
-      padding: 0 1vw;
-      box-sizing: border-box;
-      margin: auto;
+      gap: 1rem;
+      margin-bottom: 1rem;
     }
 
     .left-panel, .right-panel {
       flex: 1;
       background: rgba(255, 255, 255, 0.95);
       border-radius: 12px;
-      padding: 1.5rem;
+      padding: 1rem;
       box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     }
 
-    .left-panel h2 {
-      font-size: 1.3rem;
+    .feature-toggle-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       margin-bottom: 1rem;
+    }
+
+    .feature-toggle-header span {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #00796b;
+    }
+
+    .toggle-btn {
+      font-size: 1.5rem;
+      background-color: #00796b;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #feature-list {
+      display: none;
+      flex-direction: column;
+      gap: 0.5rem;
     }
 
     .feature {
       background: #e0f7fa;
-      padding: 1rem;
+      padding: 0.8rem;
       border-radius: 8px;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       font-weight: bold;
       color: #00796b;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     .right-panel {
       display: flex;
       flex-direction: column;
-      height: 600px;
+      height: 75vh;
+      max-height: 85vh;
     }
 
     .chat-box {
@@ -118,8 +147,8 @@
     }
 
     .avatar {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       margin: 0 0.5rem;
       object-fit: cover;
@@ -127,11 +156,10 @@
     }
 
     .bubble {
-      max-width: 70%;
+      max-width: 75%;
       padding: 0.7rem 1rem;
       border-radius: 16px;
       line-height: 1.5;
-      position: relative;
     }
 
     .timestamp {
@@ -155,8 +183,8 @@
 
     .input-area {
       display: flex;
-      align-items: center;
       gap: 0.5rem;
+      align-items: center;
     }
 
     textarea {
@@ -187,129 +215,145 @@
       .container {
         flex-direction: column;
         width: 95vw;
-        padding: 0.5rem;
       }
 
       h1 {
-        font-size: 2rem;
-        padding: 0 1rem;
+        font-size: 1.8rem;
+      }
+
+      .left-panel, .right-panel {
+        width: 100%;
+        padding: 1rem;
+      }
+
+      .right-panel {
+        height: auto;
+        max-height: none;
+      }
+
+      .bubble {
+        max-width: 90%;
       }
     }
   </style>
 </head>
 <body style="background-image: url('{{ url_for('static', filename='img/img1.jpg') }}');">
-<h1>Dịch vụ khám và tư vấn chăm sóc thú cưng tự động của GPET</h1>
+  <h1>Dịch vụ khám và tư vấn chăm sóc thú cưng tự động của GPET</h1>
 
-<div class="container">
-  <div class="left-panel">
-    <h2>Chức năng sẽ phát triển trong tương lai</h2>
-    <div class="feature">Chức năng 1: Đặt lịch khám online</div>
-    <div class="feature">Chức năng 2: Theo dõi sức khỏe định kỳ</div>
-    <div class="feature">Chức năng 3: Tư vấn dinh dưỡng</div>
-    <div class="feature">Chức năng 4: Giao thuốc tận nhà</div>
-  </div>
+  <div class="container">
+    <div class="left-panel">
+      <div class="feature-toggle-header">
+        <span>Các chức năng sẽ phát triển trong tương lai</span>
+          <br>
+        <button class="toggle-btn" onclick="toggleFeatures()" id="toggle-icon">+</button>
+      </div>
+      <div id="feature-list">
+        <div class="feature">Chức năng 1: Đặt lịch khám online</div>
+        <div class="feature">Chức năng 2: Theo dõi sức khỏe định kỳ</div>
+        <div class="feature">Chức năng 3: Tư vấn dinh dưỡng</div>
+        <div class="feature">Chức năng 4: Giao thuốc tận nhà</div>
+      </div>
+    </div>
 
-  <div class="right-panel">
-    <div class="chat-box" id="chat-box"></div>
-    <div class="input-area">
-      <textarea id="user-input" rows="2" placeholder="Nhập tin nhắn..."></textarea>
-      <button onclick="sendMessage()">Gửi</button>
+    <div class="right-panel">
+      <div class="chat-box" id="chat-box"></div>
+      <div class="input-area">
+        <textarea id="user-input" rows="2" placeholder="Nhập tin nhắn..."></textarea>
+        <button onclick="sendMessage()">Gửi</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-  const userAvatar = "{{ url_for('static', filename='img/img3.png') }}";
-  const botAvatar = "{{ url_for('static', filename='img/img2.png') }}";
+  <script>
+    const userAvatar = "{{ url_for('static', filename='img/img3.png') }}";
+    const botAvatar = "{{ url_for('static', filename='img/img2.png') }}";
 
-  function getTimeNow() {
-    const now = new Date();
-    return now.getHours().toString().padStart(2, '0') + ':' +
-           now.getMinutes().toString().padStart(2, '0');
-  }
+    function toggleFeatures() {
+      const list = document.getElementById("feature-list");
+      const icon = document.getElementById("toggle-icon");
+      const isVisible = list.style.display === "flex";
+      list.style.display = isVisible ? "none" : "flex";
+      icon.textContent = isVisible ? "+" : "−";
+    }
 
-  function appendUserMessage(message) {
-    const chatBox = document.getElementById("chat-box");
-    const timestamp = getTimeNow();
-    chatBox.innerHTML += `
-      <div class="message user">
-        <img src="${userAvatar}" alt="User Avatar" class="avatar"/>
+    function getTimeNow() {
+      const now = new Date();
+      return now.getHours().toString().padStart(2, '0') + ':' +
+             now.getMinutes().toString().padStart(2, '0');
+    }
+
+    function appendUserMessage(message) {
+      const chatBox = document.getElementById("chat-box");
+      const timestamp = getTimeNow();
+      chatBox.innerHTML += `
+        <div class="message user">
+          <img src="${userAvatar}" class="avatar"/>
+          <div class="bubble">
+            ${message}
+            <div class="timestamp">${timestamp}</div>
+          </div>
+        </div>`;
+    }
+
+    function appendBotMessage(replyMarkdown) {
+      const chatBox = document.getElementById("chat-box");
+      const timestamp = getTimeNow();
+      const htmlContent = marked.parse(replyMarkdown);
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'message bot fade-in';
+      wrapper.innerHTML = `
+        <img src="${botAvatar}" class="avatar"/>
         <div class="bubble">
-          ${message}
+          ${htmlContent}
           <div class="timestamp">${timestamp}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  function appendBotMessage(replyMarkdown) {
-    const chatBox = document.getElementById("chat-box");
-    const timestamp = getTimeNow();
-    const htmlContent = marked.parse(replyMarkdown);
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'message bot fade-in';
-    wrapper.innerHTML = `
-      <img src="${botAvatar}" alt="Bot Avatar" class="avatar"/>
-      <div class="bubble">
-        ${htmlContent}
-        <div class="timestamp">${timestamp}</div>
-      </div>
-    `;
-    chatBox.appendChild(wrapper);
-    setTimeout(() => wrapper.classList.add('show'), 50);
-    MathJax.typesetPromise();
-  }
-
-  async function sendMessage() {
-    const input = document.getElementById("user-input");
-    const message = input.value.trim();
-    if (!message) return;
-
-    appendUserMessage(message);
-    input.value = "";
-    input.focus();
-
-    try {
-      const response = await fetch("/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ message })
-      });
-
-      const data = await response.json();
-      appendBotMessage(data.reply || 'Đã xảy ra lỗi!');
-    } catch (error) {
-      appendBotMessage("Không thể kết nối với máy chủ!");
+        </div>`;
+      chatBox.appendChild(wrapper);
+      setTimeout(() => wrapper.classList.add('show'), 50);
+      MathJax.typesetPromise();
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    const chatBox = document.getElementById("chat-box");
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const message = input.value.trim();
+      if (!message) return;
 
-  async function sendWelcomeMessage() {
-    try {
-      const response = await fetch("/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ message: "" })
-      });
+      appendUserMessage(message);
+      input.value = "";
+      input.focus();
 
-      const data = await response.json();
-      appendBotMessage(data.reply || "Xin chào!");
-    } catch (error) {
-      appendBotMessage("Không thể kết nối để lấy lời chào!");
+      try {
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+        const data = await response.json();
+        appendBotMessage(data.reply || "Đã xảy ra lỗi!");
+      } catch (error) {
+        appendBotMessage("Không thể kết nối với máy chủ!");
+      }
     }
-  }
 
-  window.onload = () => {
-    document.getElementById("user-input").focus();
-    sendWelcomeMessage();
-  };
-</script>
+    async function sendWelcomeMessage() {
+      try {
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: "" })
+        });
+        const data = await response.json();
+        appendBotMessage(data.reply || "Xin chào!");
+      } catch (error) {
+        appendBotMessage("Không thể kết nối để lấy lời chào!");
+      }
+    }
+
+    window.onload = () => {
+      document.getElementById("user-input").focus();
+      sendWelcomeMessage();
+    };
+  </script>
 </body>
 </html>
