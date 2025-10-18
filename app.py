@@ -54,7 +54,8 @@ def chat():
     except Exception as e:
         print("LỖI:", e)
         return jsonify({"error": str(e)}), 500
-
+#ngrok config add-authtoken 34Aw6OBPYnUu2twDpvmXxOYYrf4_69GFTDQG24zod9z14idu8
+#python -m http.server 5500
 # Khởi chạy server cục bộ (Render sẽ dùng start command riêng)
 if __name__ == '__main__':
     app.run(debug=True, port=5000, host='0.0.0.0')
