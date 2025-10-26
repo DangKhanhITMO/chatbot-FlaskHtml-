@@ -1,0 +1,16 @@
+{
+  "gioi_thieu_gaia": {
+    "vi": {
+      "question": "Bạn có muốn tôi giới thiệu tổng quan về hệ thống GAIA PET không?",
+      "answer_html": "<div>...</div>"
+    },
+    "en": {
+      "question": "Would you like me to introduce the GAIA PET system?",
+      "answer_html": "<div>...</div>"
+    },
+    "ja": {
+      "question": "GAIA PETシステムの概要をご紹介しましょうか？",
+      "answer_html": "<div>...</div>"
+    }
+  }
+}
