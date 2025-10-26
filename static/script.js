@@ -3,16 +3,16 @@ let languageSelected = false;
 let isBotTyping = false;
 const historyKey = "chat_history";
 
-// === SỬ DỤNG sessionStorage để reset khi reload ===
 window.onload = () => {
-  sessionStorage.removeItem(historyKey); // Xóa lịch sử mỗi khi load lại
+  sessionStorage.removeItem(historyKey);
   showWelcomeMessage();
   disableInput();
 };
 
 // Gửi tin nhắn khi nhấn Enter
 document.addEventListener('keydown', function (e) {
-  if (e.key === 'Enter') {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
     const input = document.getElementById('user-input');
     if (!input.disabled && input.value.trim() !== '') {
       sendMessage();
@@ -33,19 +33,14 @@ function sendMessage() {
 
   fetch('/ask', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      question: message,
-      flag_language: flag_language
-    })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question: message, flag_language: flag_language })
   })
   .then(res => res.json())
   .then(data => {
     removeTypingIndicator();
     if (data.answer) {
-      appendMessage('bot', data.answer);
+      appendMessage('bot', data.answer, true); // <-- hiện LaTeX
     } else {
       appendMessage('bot', 'Xin lỗi, tôi không tìm thấy câu trả lời phù hợp.');
     }
@@ -59,10 +54,9 @@ function sendMessage() {
   });
 }
 
-// Hiển thị lựa chọn ngôn ngữ
 function showWelcomeMessage() {
   const chatBox = document.getElementById('chat-box');
-  chatBox.innerHTML = ''; // Xóa mọi nội dung cũ
+  chatBox.innerHTML = '';
 
   const systemMessage = document.createElement('div');
   systemMessage.className = 'message bot';
@@ -88,17 +82,12 @@ function selectLanguage(lang) {
 
   fetch('/init', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      flag_language: flag_language,
-      message: 'hello'
-    })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ flag_language: flag_language })
   })
   .then(res => res.json())
   .then(data => {
-    appendMessage('bot', data.response);
+    appendMessage('bot', data.response, true);
     enableInput();
   })
   .catch(err => {
@@ -110,53 +99,56 @@ function selectLanguage(lang) {
 function disableInput() {
   const input = document.getElementById('user-input');
   const sendBtn = document.getElementById('send-btn');
-  if (input) input.disabled = true;
-  if (sendBtn) sendBtn.disabled = true;
+  input.disabled = true;
+  sendBtn.disabled = true;
 }
 
 function enableInput() {
   const input = document.getElementById('user-input');
   const sendBtn = document.getElementById('send-btn');
-  if (input) input.disabled = false;
-  if (sendBtn) sendBtn.disabled = false;
+  input.disabled = false;
+  sendBtn.disabled = false;
   input.focus();
 }
+
 function getCurrentTime() {
   const now = new Date();
-  return now.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false   // ✅ 24h format
-  });
+  return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 }
-function appendMessage(sender, text) {
+
+function appendMessage(sender, text, isHtml = false) {
   const chatBox = document.getElementById('chat-box');
 
   const messageDiv = document.createElement('div');
   messageDiv.className = 'message ' + sender;
 
-  // Tạo avatar
   const avatar = document.createElement('img');
   avatar.className = 'avatar';
-  avatar.src = sender === 'user'
-    ? 'static/img/img3.png'
-    : 'static/img/logo.jpg';
+  avatar.src = sender === 'user' ? 'static/img/img3.png' : 'static/img/logo.jpg';
   avatar.alt = sender + ' avatar';
 
-  // Tạo phần nội dung
   const contentWrapper = document.createElement('div');
   contentWrapper.className = 'content-wrapper';
 
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
-  bubble.textContent = text;
 
   const timestamp = document.createElement('div');
   timestamp.className = 'timestamp';
   timestamp.textContent = getCurrentTime();
 
+  if (isHtml) {
+    // Render markdown + latex
+    bubble.innerHTML = marked.parse(text);
+    bubble.appendChild(timestamp);
+    MathJax.typesetPromise([bubble]); // Re-render MathJax
+  } else {
+    bubble.textContent = text;
+    bubble.appendChild(timestamp);
+  }
 
-  // Gắn vào tin nhắn theo hướng trái/phải
+  contentWrapper.appendChild(bubble);
+
   if (sender === 'user') {
     messageDiv.appendChild(contentWrapper);
     messageDiv.appendChild(avatar);
@@ -165,14 +157,12 @@ function appendMessage(sender, text) {
     messageDiv.appendChild(contentWrapper);
   }
 
-  bubble.appendChild(timestamp); // timestamp nằm trong bubble
-  contentWrapper.appendChild(bubble);
   chatBox.appendChild(messageDiv);
   chatBox.scrollTop = chatBox.scrollHeight;
 
   saveMessageToHistory(sender, text);
 }
-// Spinner
+
 function showTypingIndicator() {
   isBotTyping = true;
   const chatBox = document.getElementById('chat-box');
@@ -204,7 +194,6 @@ function disableLanguageButtons() {
   });
 }
 
-// === Lưu lịch sử vào sessionStorage thay vì localStorage ===
 function saveMessageToHistory(sender, text) {
   let history = JSON.parse(sessionStorage.getItem(historyKey)) || [];
   history.push({ sender, text });
@@ -215,7 +204,7 @@ function loadChatHistory() {
   const history = JSON.parse(sessionStorage.getItem(historyKey)) || [];
   if (history.length > 0) {
     languageSelected = true;
-    history.forEach(msg => appendMessage(msg.sender, msg.text));
+    history.forEach(msg => appendMessage(msg.sender, msg.text, msg.sender === 'bot'));
     enableInput();
   }
 }

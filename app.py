@@ -54,19 +54,29 @@ def get_embedding(text, model="text-embedding-3-small"):
 def find_best_match(user_question, threshold=0.85):
     user_embedding = get_embedding(user_question)
     if user_embedding is None:
+        print("❌ Không thể tạo embedding cho câu hỏi người dùng.")
         return None, 0.0
-
+    #print("[DEBUG] Bắt đầu so sánh với các embedding trong dữ liệu")
     best_score = -1
     best_row = None
 
     for idx, row in df.iterrows():
         emb = row["embedding"]
-        score = 1 - cosine(user_embedding, emb)
+        if emb is None:
+            continue
+        try:
+            score = 1 - cosine(user_embedding, emb)
+        except Exception as e:
+            print(f"❌ Lỗi khi tính cosine: {e}")
+            continue
         if score > best_score:
             best_score = score
             best_row = row
 
-    return best_row["id_question"], best_score
+    if best_row is not None:
+        return best_row["id_question"], best_score
+    else:
+        return None, 0.0
 
 def load_data_from_json(file_path):
     """Load JSON data from a file."""
@@ -163,10 +173,11 @@ def ask_question():
 
     # Fallback: tạo câu trả lời từ OpenAI nếu không có câu hỏi nào phù hợp
     try:
+        print("[DEBUG] Không tìm thấy câu hỏi phù hợp, gọi OpenAI...")
         completion = client.chat.completions.create(
-            model="gpt-4o-latest",
+            model="gpt-4o",
             messages=[
-                {"role": "system", "content": f"You are a customer care and consultation expert in the veterinary field. Please answer the following question in language {lang} in a clear, fluent, and engaging manner to capture the customer’s interest. Please make sure to include the following sentence in your response: 'Your question is not included in the data I was provided. I will respond based on the knowledge I have been trained on as follows:."},
+                {"role": "system", "content": f"You are a customer care and consultation expert in the veterinary field. Please answer the following question in language {lang} in a clear and In the topic and context is GAIA pet clinic and care at GAIA Ocean Park – Building 01S5, block R105, Zen Park, Vinhomes Ocean Park 1 urban area, Gia Lam, Hanoi, fluent, and engaging manner to capture the customer’s interest."},
                 {"role": "user", "content": question}
             ]
         )

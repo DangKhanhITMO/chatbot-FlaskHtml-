@@ -1,8 +1,13 @@
+/* ==== RESET VÀ CƠ BẢN ==== */
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  padding: 0;
+  padding: 0 1rem;
   font-family: 'Quicksand', sans-serif;
-  background-image: url("static/img/bgr_vang.jpeg");
+  background-image: url("img/bgr_vang.jpeg");
   background-size: cover;
   background-repeat: no-repeat;
   background-attachment: fixed;
@@ -16,7 +21,7 @@ body {
 /* ==== HEADER ==== */
 header {
   text-align: center;
-  padding: 2rem 1rem 1rem;
+  padding: 2rem 0 1rem;
   width: 100%;
   max-width: 1200px;
 }
@@ -31,6 +36,7 @@ header {
     0 0 15px #00f0ff;
   letter-spacing: 1px;
   margin: 0 auto;
+  word-break: break-word;
 }
 
 /* ==== CHAT AREA ==== */
@@ -53,11 +59,16 @@ header {
   overflow-y: auto;
   margin-bottom: 1rem;
   max-height: 60vh;
+  padding-right: 0.5rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
+
 .message {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
+  flex-wrap: nowrap;
 }
 
 .message.user {
@@ -73,14 +84,17 @@ header {
   max-width: 90%;
   display: flex;
   flex-direction: column;
+  word-break: break-word;
 }
 
+/* ==== BUBBLE ==== */
 .bubble {
   width: auto;
   padding: 0.8rem 1rem;
   border-radius: 16px;
   line-height: 1.5;
   word-wrap: break-word;
+  overflow-x: auto;
 }
 
 .user .bubble {
@@ -95,10 +109,12 @@ header {
   font-family: 'Merriweather', serif;
 }
 
+/* ==== INPUT AREA ==== */
 .input-area {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex-wrap: nowrap;
 }
 
 textarea,
@@ -109,6 +125,9 @@ input[type="text"] {
   border-radius: 10px;
   border: 1px solid #ccc;
   resize: none;
+  min-height: 40px;
+  max-height: 120px;
+  overflow-y: auto;
 }
 
 button {
@@ -126,6 +145,7 @@ button:hover {
   background-color: #1a75d1;
 }
 
+/* ==== LANGUAGE BUTTON ==== */
 .lang-btn {
   padding: 0.5rem 1rem;
   margin: 0.2rem;
@@ -142,7 +162,7 @@ button:hover {
   background-color: #1a75d1;
 }
 
-/* ==== AVATAR FIX ==== */
+/* ==== AVATAR ==== */
 .avatar {
   width: 32px;
   height: 32px;
@@ -150,11 +170,10 @@ button:hover {
   object-fit: cover;
   margin: 0 0.5rem;
   box-shadow: 0 0 5px rgba(0,0,0,0.2);
-  overflow: hidden;
   flex-shrink: 0;
 }
 
-/* ==== SPINNER (Typing Indicator) ==== */
+/* ==== TYPING INDICATOR ==== */
 .typing-indicator .bubble {
   display: flex;
   gap: 5px;
@@ -188,20 +207,35 @@ button:hover {
   }
 }
 
+/* ==== TIMESTAMP ==== */
+.timestamp {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.3rem;
+  text-align: right;
+  width: 100%;
+  align-self: flex-end;
+}
+
 /* ==== RESPONSIVE ==== */
 @media (max-width: 768px) {
   .title-3d {
     font-size: 1.8rem;
-    padding: 0 1rem;
+    padding: 0 0.5rem;
   }
 
   .chat-container {
     padding: 1rem;
-    margin: 1rem;
+    margin: 1rem 0.5rem;
   }
 
   .bubble {
-    max-width: 90%;
+    max-width: 100%;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .message .content-wrapper {
+    max-width: 85%;
   }
 }
 
@@ -217,49 +251,20 @@ button:hover {
 
   button {
     padding: 0.6rem 1rem;
+    font-size: 0.9rem;
   }
 
   .avatar {
-    width: 16px;
-    height: 16px;
+    width: 24px;
+    height: 24px;
   }
 
-  .content-wrapper {
-    display: flex;
-    flex-direction: column;
-    max-width: 75%;
-  }
-
-  .message.user .content-wrapper {
-    align-items: flex-end;
+  .message .content-wrapper {
+    max-width: 80%;
   }
 
   .bubble {
-    background-color: #f0f0f0;
-    padding: 0.7rem 1rem;
-    border-radius: 16px;
-    line-height: 1.5;
-    position: relative;
-    word-wrap: break-word;
+    font-size: 0.95rem;
+    line-height: 1.4;
   }
-
-  .message.user .bubble {
-    background-color: #d0ebff;
-    color: #003366;
-    text-align: right;
-  }
-
-  .message.bot .bubble {
-    background-color: #e6ffe6;
-    color: #1b4d1b;
-    text-align: left;
-  }
-}
-.timestamp {
-  font-size: 0.75rem;
-  color: #666;
-  margin-top: 0.3rem;
-  text-align: right;
-  width: 100%;
-  align-self: flex-end;
 }
