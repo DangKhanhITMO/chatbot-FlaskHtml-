@@ -19,7 +19,6 @@ if not OPENAI_API_KEY:
 
 # Khởi tạo client OpenAI
 client = OpenAI(api_key=OPENAI_API_KEY)
-app = Flask(__name__)
 def get_path_pkl(language):
     if language == "vi":
         return "data/vi_qa_with_embeddings.pkl"
@@ -189,5 +188,3 @@ def ask_question():
         "matched": False,
         "answer": answer
     })
-if __name__ == '__main__':
-    app.run(debug=True, port=5000, host='0.0.0.0')
