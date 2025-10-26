@@ -2,7 +2,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Quicksand', sans-serif;
-  background-image: url("img/bgr_vang.jpeg");
+  background-image: url("static/img/bgr_vang.jpeg");
   background-size: cover;
   background-repeat: no-repeat;
   background-attachment: fixed;
