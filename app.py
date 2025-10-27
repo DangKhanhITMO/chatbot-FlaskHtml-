@@ -7,10 +7,11 @@ import os
 import pandas as pd
 from scipy.spatial.distance import cosine
 import pickle
+
 load_dotenv()
 
 app = Flask(__name__, template_folder="templates")
-CORS(app)  # Không cần supports_credentials vì không dùng session
+CORS(app)
 
 # Lấy API Key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -19,6 +20,7 @@ if not OPENAI_API_KEY:
 
 # Khởi tạo client OpenAI
 client = OpenAI(api_key=OPENAI_API_KEY)
+
 def get_path_pkl(language):
     if language == "vi":
         return "data/vi_qa_with_embeddings.pkl"
@@ -26,25 +28,16 @@ def get_path_pkl(language):
         return "data/en_question_embeddings.pkl"
     if language == "ja":
         return "data/ja_question_embeddings.pkl"
-    else:
-        return None
+    return None
 
 path_pickle = get_path_pkl("vi")
 with open(path_pickle, "rb") as f:
     data = pickle.load(f)
-
-# 2. Kiểm tra và chuyển về DataFrame nếu cần
-if isinstance(data, list):
-    df = pd.DataFrame(data)
-else:
-    df = data
+df = pd.DataFrame(data) if isinstance(data, list) else data
 
 def get_embedding(text, model="text-embedding-3-small"):
     try:
-        response = client.embeddings.create(
-            input=text,
-            model=model
-        )
+        response = client.embeddings.create(input=text, model=model)
         return response.data[0].embedding
     except Exception as e:
         print(f"❌ Lỗi khi tạo embedding: {e}")
@@ -53,14 +46,13 @@ def get_embedding(text, model="text-embedding-3-small"):
 def find_best_match(user_question, threshold=0.85):
     user_embedding = get_embedding(user_question)
     if user_embedding is None:
-        print("❌ Không thể tạo embedding cho câu hỏi người dùng.")
         return None, 0.0
-    #print("[DEBUG] Bắt đầu so sánh với các embedding trong dữ liệu")
+
     best_score = -1
     best_row = None
 
     for idx, row in df.iterrows():
-        emb = row["embedding"]
+        emb = row.get("embedding")
         if emb is None:
             continue
         try:
@@ -74,18 +66,15 @@ def find_best_match(user_question, threshold=0.85):
 
     if best_row is not None:
         return best_row["id_question"], best_score
-    else:
-        return None, 0.0
+    return None, 0.0
 
 def load_data_from_json(file_path):
-    """Load JSON data from a file."""
     with open(file_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 def get_answer_by_id_and_language(data_json, id_question, language):
     for item in data_json:
-        item_id = str(item.get("id_question", "")).strip()
-        if item_id == str(id_question).strip():
+        if str(item.get("id_question", "")).strip() == str(id_question).strip():
             lang_data = item.get(language)
             if lang_data and "answer" in lang_data:
                 return lang_data["answer"]
@@ -96,6 +85,7 @@ def get_answer_by_id_and_language(data_json, id_question, language):
 @app.route('/')
 def index():
     return render_template("index.html")
+
 @app.route('/init', methods=['POST'])
 def init_language():
     data = request.get_json()
@@ -106,7 +96,7 @@ def init_language():
             "Quý khách đã chọn ngôn ngữ Tiếng Việt để được tư vấn.\n"
             " Xin kính chào quý khách! Tôi là trợ lý tư vấn tự động của Phòng khám và Chăm sóc Thú cưng GAIA PET."
             " Rất hân hạnh được đồng hành cùng quý khách và thú cưng yêu quý."
-             " Quý khách cần hỗ trợ điều gì ạ?"
+            " Quý khách cần hỗ trợ điều gì ạ?"
         )
     elif lang == 'ja':
         response = (
@@ -124,18 +114,36 @@ def init_language():
         )
 
     return jsonify({"response": response})
+
 @app.route('/ask', methods=['POST'])
 def ask_question():
     data = request.get_json()
     question = data.get("question", "").strip()
     lang = data.get("flag_language", "en")
-    #print(f"[DEBUG] Nhận được câu hỏi: '{question}' với ngôn ngữ: '{lang}'")
+
     if not question:
         return jsonify({"error": "Missing question"}), 400
 
-    # Load đúng file pickle theo ngôn ngữ
+    # ✅ Nếu tiếng Việt, dùng fine-tuned model
+    if lang == "vi":
+        try:
+            completion = client.chat.completions.create(
+                model="ft:gpt-3.5-turbo-0125:personal::CV70liZF",
+                messages=[
+                    {"role": "system", "content": "Bạn là trợ lý tư vấn chăm sóc thú cưng của GAIA PET. Diễn đạt câu trả lời đảm bảo tính lịch sử và thu hút khách hàng."},
+                    {"role": "user", "content": question}
+                ]
+            )
+            answer = completion.choices[0].message.content.strip()
+            return jsonify({
+                "matched": False,
+                "answer": answer
+            })
+        except Exception as e:
+            return jsonify({"error": f"OpenAI error (fine-tuned): {e}"}), 500
+
+    # ✅ Các ngôn ngữ khác xử lý như cũ
     path_pickle = get_path_pkl(lang)
-    #print(f"file pickle : {path_pickle}")
     if not path_pickle or not os.path.exists(path_pickle):
         return jsonify({"error": f"No embedding data for language '{lang}'."}), 500
 
@@ -146,17 +154,12 @@ def ask_question():
     except Exception as e:
         return jsonify({"error": f"Failed to load embedding data: {e}"}), 500
 
-    # Gán df tạm thời vào biến toàn cục df để dùng trong find_best_match
     global df
     df = df_local
 
-    # Tìm câu hỏi gần nhất
     id_match, score = find_best_match(question)
-
-    # Nếu điểm tương đồng thấp => fallback OpenAI
     THRESHOLD = 0.8
     if id_match and score >= THRESHOLD:
-        # Load file JSON chứa nội dung QA
         json_path = f"data/qa_translations.json"
         if not os.path.exists(json_path):
             return jsonify({"error": f"Missing QA JSON file for language '{lang}'"}), 500
@@ -170,13 +173,11 @@ def ask_question():
             "answer": answer
         })
 
-    # Fallback: tạo câu trả lời từ OpenAI nếu không có câu hỏi nào phù hợp
     try:
-        print("[DEBUG] Không tìm thấy câu hỏi phù hợp, gọi OpenAI...")
         completion = client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": f"You are a customer care and consultation expert in the veterinary field. Please answer the following question in language {lang} in a clear and In the topic and context is GAIA pet clinic and care at GAIA Ocean Park – Building 01S5, block R105, Zen Park, Vinhomes Ocean Park 1 urban area, Gia Lam, Hanoi, fluent, and engaging manner to capture the customer’s interest."},
+                {"role": "system", "content": f"You are a customer care and consultation expert in the veterinary field. Please answer the following question in language {lang} in a clear and in-context manner related to GAIA pet clinic and care."},
                 {"role": "user", "content": question}
             ]
         )
